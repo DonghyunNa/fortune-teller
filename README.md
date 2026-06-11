@@ -1,8 +1,10 @@
 # Fortune Telling API
 
-한국식 사주명리부터 시작하는 멀티 운세 FastAPI 서비스. Anthropic Claude로 자연어 풀이를 생성한다.
+한국식 사주명리부터 시작하는 멀티 운세 FastAPI 서비스. Anthropic Claude로 자연어 풀이를 생성합니다.
 
-학습/재미용 MVP — 절기 시각은 평균값 근사를 사용하므로 정밀 사주 풀이에는 부적합.
+> 학습·재미용 MVP — 절기 시각은 평균값 근사를 사용하므로 정밀 사주 풀이에는 부적합합니다.
+
+**스택**: Python 3.11+ · FastAPI · Anthropic SDK (`claude-sonnet-4-6`) · `korean-lunar-calendar`
 
 ## 빠른 시작
 
@@ -12,17 +14,17 @@
 # 1) 의존성 설치 (자동으로 .venv 생성)
 make install
 
-# 2) Anthropic API 키 설정 (/saju/interpret 호출에만 필요. /saju/calc은 키 없이 사용 가능)
+# 2) Anthropic API 키 설정 (/saju/interpret · /saju/reading 호출 시 필요. /saju/calc은 키 없이 사용 가능)
 cp .env.example .env
 # .env 파일을 열어 ANTHROPIC_API_KEY=sk-ant-... 채우기
-# (선택) ANTHROPIC_MODEL 환경변수로 모델 ID override 가능. 기본값이 안 되면 docs.anthropic.com 확인
+# (선택) ANTHROPIC_MODEL 환경변수로 모델 ID override 가능
 
 # 3) 개발 서버 (자동 reload)
 make dev
 # → http://127.0.0.1:8000/docs 에서 OpenAPI UI 사용
 ```
 
-사용 가능한 명령어: `make` 또는 `make help`
+사용 가능한 명령어 (`make` 또는 `make help`):
 
 | 명령 | 동작 |
 |------|------|
@@ -52,25 +54,24 @@ make dev
 {
   "pillars": {
     "year": {"stem": "경", "branch": "오", "sexagenary": "경오", "stem_element": "금", "branch_element": "화"},
-    "month": {"stem": "임", "branch": "오", "sexagenary": "임오", ...},
-    "day": {...},
-    "hour": {...}
+    "month": {"stem": "임", "branch": "오", "sexagenary": "임오", "...": "..."},
+    "day": {"...": "..."},
+    "hour": {"...": "..."}
   },
   "day_master": "...",
   "elements": {"목": 1, "화": 3, "토": 1, "금": 2, "수": 1},
   "ten_gods": {"year_stem": "정관", "month_stem": "편인", "hour_stem": "비견"},
   "hour_unknown": false,
-  "normalized": {...}
+  "normalized": {"...": "..."}
 }
 ```
 
-**시간 미정**: `birth_hour: null` 입력 시 `pillars.hour = null`, `hour_unknown = true`, 십신에서 `hour_stem` 키 누락.
-
-**음력**: `calendar: "lunar"` + 윤달이면 `is_leap_month: true`.
+- **시간 미정**: `birth_hour: null` 입력 시 `pillars.hour = null`, `hour_unknown = true`, 십신에서 `hour_stem` 키 누락.
+- **음력**: `calendar: "lunar"` + 윤달이면 `is_leap_month: true`.
 
 ### `POST /saju/reading` — 통합 풀이 (계산 + LLM 한 번에)
 
-`calc` + `interpret`을 한 번에 처리. `focus`/`tone` 외에 `gender`/`context`로 LLM 컨텍스트를 보강. 만 나이는 `birth_date`에서 서버가 자동 계산합니다.
+`calc` + `interpret`을 한 번에 처리합니다. `focus`/`tone` 외에 `gender`/`context`로 LLM 컨텍스트를 보강할 수 있습니다. 만 나이는 `birth_date`에서 서버가 자동 계산합니다.
 
 요청:
 ```json
@@ -99,21 +100,21 @@ make dev
 
 ### `POST /saju/interpret` — LLM 자연어 풀이
 
-`/saju/calc`의 응답 객체를 그대로 `pillars` 필드에 넣어 호출.
+`/saju/calc`의 응답 객체를 그대로 `pillars` 필드에 넣어 호출합니다.
 
 요청:
 ```json
 {
-  "pillars": { /* /saju/calc 응답 그대로 */ },
+  "pillars": { "...": "/saju/calc 응답 그대로" },
   "focus": "직업운",
   "tone": "balanced"
 }
 ```
 
-- `focus`: 풀이 초점 자유 입력 (예: `"직업운"`, `"연애운"`, `"건강"`). 생략하면 종합 풀이.
-- `tone`: 자유 입력. 프리셋 `balanced`/`playful`/`scholarly` 또는 자유 표현(예: `"20대 친구처럼"`)
-- `gender`: `male` | `female`. 생략 가능
-- `context`: 자유 메모 (최대 500자)
+- `focus`: 풀이 초점 자유 입력. 생략하면 종합 풀이
+- `tone`: 자유 입력. 프리셋 `balanced`/`playful`/`scholarly` 또는 자유 표현
+- `gender`: `male` / `female` (선택)
+- `context`: 자유 메모 최대 500자 (선택)
 
 만 나이는 `pillars.normalized.solar_date`에서 서버가 자동 계산해 LLM 컨텍스트로 전달됩니다.
 
@@ -128,7 +129,7 @@ make dev
 }
 ```
 
-LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발생하지 않음.
+LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발생하지 않습니다.
 
 ## 도메인 룰 요약
 
@@ -141,20 +142,18 @@ LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발�
 | 오행 | 8자(시주 미상 시 6자) 카운트 |
 | 십신 | 일간 vs 다른 천간(연·월·시)의 오행+음양 관계 |
 
-상세는 `_workspace/01_domain_rules.md` 참조.
-
 ## 알려진 한계 (v0.1)
 
-- **24절기 시각 정밀도**: 평균 시각 ±수 시간 오차. 절기 ±12시간 경계 입력은 결과가 달라질 수 있음.
-- **`korean-lunar-calendar` 지원 범위**: 1900~2050.
-- **진태양시 보정 미적용**: KST 그대로 사용.
-- **자시 정책 옵션 없음**: 야자시 고정.
+- **24절기 시각 정밀도**: 평균 시각 ±수 시간 오차. 절기 ±12시간 경계 입력은 결과가 달라질 수 있음
+- **`korean-lunar-calendar` 지원 범위**: 1900~2050
+- **진태양시 보정 미적용**: KST 그대로 사용
+- **자시 정책 옵션 없음**: 야자시 고정
 
-정밀 풀이가 필요하면 24절기 시각을 정확한 천문 계산 라이브러리(`sxtwl` 등)로 교체하라.
+정밀 풀이가 필요하면 24절기 시각을 정확한 천문 계산 라이브러리(`sxtwl` 등)로 교체하세요.
 
 ## 확장: 새 운세 모듈 추가
 
-타로·별자리·일일운세 등은 같은 구조로 추가한다.
+타로·별자리·일일운세 등은 같은 구조로 추가합니다.
 
 1. `app/{type}/` 디렉토리 생성 — `router.py`, `schemas.py`, `calculator.py` (또는 `picker.py`), `interpreter.py`
 2. `app/main.py`에 한 줄 추가:
@@ -162,8 +161,7 @@ LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발�
    from app.tarot.router import router as tarot_router
    app.include_router(tarot_router, prefix="/tarot", tags=["tarot"])
    ```
-3. `_workspace/0X_{type}_rules.md`에 운세별 도메인 결정사항 기록
 
-## 라이선스
+## 면책
 
-학습/재미용 코드. 운세 풀이의 결과는 자기 이해를 위한 도구이지 단정적 미래 예측이 아니다.
+학습·재미용 토이 프로젝트입니다. 운세 풀이 결과는 자기 이해를 위한 도구이지 단정적 미래 예측이 아닙니다.
