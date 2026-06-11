@@ -40,6 +40,7 @@ Thumbs.db
 
 # Claude Code (local)
 .claude/
+CLAUDE.md
 
 # Local workspace artifacts
 _workspace/
