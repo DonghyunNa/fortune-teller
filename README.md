@@ -131,6 +131,94 @@ make dev
 
 LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발생하지 않습니다.
 
+### `POST /daily/calc` — 일일운세(일진) 계산
+
+해당 날짜의 일진(日辰, 그날의 60갑자 일주)을 계산합니다. `birth_date`를 주면 사용자 일간과의 관계(십신)·오행 보강까지 개인화되고, 없으면 일진 자체의 기운만 풀이합니다.
+
+요청 (개인화):
+```json
+{
+  "target_date": "2026-06-12",
+  "birth_date": "1991-11-29",
+  "birth_hour": 14,
+  "birth_minute": 0,
+  "calendar": "solar",
+  "is_leap_month": false
+}
+```
+
+응답 (개인화):
+```json
+{
+  "day_ganzhi": {"stem": "계", "branch": "미", "sexagenary": "계미", "stem_element": "수", "branch_element": "토"},
+  "target_date": "2026-06-12",
+  "personalized": true,
+  "day_master": "기",
+  "relation_ten_god": "편재",
+  "element_focus": {
+    "day_stem_element": "수",
+    "day_branch_element": "토",
+    "user_elements": {"목": 0, "화": 1, "토": 4, "금": 2, "수": 1},
+    "reinforced": []
+  },
+  "normalized": {"today_used": false, "calendar_input": "solar", "ja_si_policy": "야자시"}
+}
+```
+
+- **`target_date` 기본값**: 비우면 오늘(KST)을 사용하고 `normalized.today_used = true`로 신호합니다. 지원 범위는 1900~2050.
+- **개인화 차이**:
+  - `birth_date` 있음 → `personalized: true`, `day_master`(사용자 일간)·`relation_ten_god`(일간 기준 오늘 천간의 십신)·`element_focus.user_elements`/`reinforced`(오늘 보강되는 기운)까지 채워집니다.
+  - `birth_date` 없음 → `personalized: false`, `day_master`/`relation_ten_god`는 `null`, `element_focus`는 `day_stem_element`/`day_branch_element` 2키만(그날 일진의 오행만).
+- **`birth_hour`**: 일진과의 관계(일간·십신)는 날짜 기준이라 시주의 영향이 없습니다. 다만 `element_focus.user_elements`/`reinforced`(오행 분포 보강)에는 시주가 한 글자 더해지므로, `birth_hour` 값에 따라 보강 오행이 달라질 수 있습니다.
+
+### `POST /daily/reading` — 일일운세 통합 풀이 (계산 + LLM 한 번에)
+
+`/daily/calc` + `/daily/interpret`을 한 번에 처리합니다.
+
+요청:
+```json
+{
+  "target_date": "2026-06-12",
+  "birth_date": "1991-11-29",
+  "birth_hour": 14,
+  "birth_minute": 0,
+  "calendar": "solar",
+  "is_leap_month": false,
+  "focus": "일/업무",
+  "tone": "balanced",
+  "gender": "male",
+  "context": "오늘 중요한 미팅이 있습니다"
+}
+```
+
+- `target_date` 생략 시 오늘(KST)의 운세를 봅니다.
+- `focus`: 오늘 풀이 초점 자유 입력. 예: `"일/업무"`, `"관계"`, `"재물"`, `"건강"`. 생략하면 종합
+- `tone`: 자유 입력. 프리셋 `balanced`/`playful`/`scholarly` 또는 자유 표현
+- `gender`: `male` / `female` (선택), `context`: 자유 메모 최대 500자 (선택)
+
+응답: `daily`(일진 계산 결과) + `interpretation`(LLM 풀이) + `model`/`tokens_*`/`error`.
+
+- 계산 실패(범위 밖·윤달 오류) → 422
+- LLM 실패 → 200 + `interpretation: null` + `error: "..."`
+
+### `POST /daily/interpret` — 일일운세 LLM 풀이
+
+`/daily/calc`의 응답 객체를 그대로 `daily` 필드에 넣어 호출합니다.
+
+요청:
+```json
+{
+  "daily": { "...": "/daily/calc 응답 그대로" },
+  "focus": "일/업무",
+  "tone": "balanced",
+  "gender": "male",
+  "context": "오늘 중요한 미팅이 있습니다"
+}
+```
+
+- 개인화 응답(`personalized: true`)을 넣으면 일간·십신·오행 보강을 반영한 풀이가, 비개인화 응답을 넣으면 일진 전반의 기운만 풀이됩니다.
+- 응답 shape·에러 정책은 `/saju/interpret`과 동일(`interpretation`/`model`/`tokens_in`/`tokens_out`/`error`, LLM 실패 시 200 + `error`).
+
 ## 도메인 룰 요약
 
 | 항목 | 룰 |

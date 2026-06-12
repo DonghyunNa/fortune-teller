@@ -4,6 +4,7 @@ from fastapi import FastAPI
 load_dotenv()
 
 from app.saju.router import router as saju_router
+from app.daily.router import router as daily_router
 
 app = FastAPI(
     title="Fortune Telling API",
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(saju_router, prefix="/saju", tags=["saju"])
+app.include_router(daily_router, prefix="/daily", tags=["daily"])
 
 
 @app.get("/health")
