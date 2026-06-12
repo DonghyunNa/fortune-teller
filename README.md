@@ -34,6 +34,20 @@ make dev
 | `make test` | 테스트 실행 (`pytest`) |
 | `make clean` | `__pycache__`·빌드 산출물 제거 |
 
+## 웹 UI
+
+`make dev`로 서버를 띄우면 같은 포트에서 API와 웹 UI가 함께 동작합니다(빌드 단계·npm 의존성 없음).
+
+| 주소 | 내용 |
+|------|------|
+| <http://127.0.0.1:8000/> | 웹 UI — 사주 / 오늘의 운세 / 타로 탭 |
+| <http://127.0.0.1:8000/docs> | OpenAPI(Swagger) 문서 |
+
+- 정적 파일은 `app/static/`(`index.html` · `style.css` · `app.js`)에 있고, FastAPI의 `StaticFiles`가 서빙합니다.
+- UI는 통합 엔드포인트 3개(`/saju/reading` · `/daily/reading` · `/tarot/reading`)를 fetch로 호출합니다.
+- LLM 풀이는 API 키가 있을 때만 채워집니다. 키가 없으면 계산/추출 결과는 그대로 보여주고 풀이 영역에만 안내가 표시됩니다(서버 500 없음).
+- `app.mount("/", StaticFiles(...))`는 모든 경로를 가로채므로 `main.py`에서 **API 라우터·`/health` 등록 뒤**에 마운트합니다. `/saju`·`/daily`·`/tarot`·`/docs`는 정상 동작합니다.
+
 ## 엔드포인트
 
 ### `POST /saju/calc` — 사주팔자 계산

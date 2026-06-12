@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 
@@ -21,3 +24,10 @@ app.include_router(tarot_router, prefix="/tarot", tags=["tarot"])
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# 정적 웹 UI. mount("/")는 모든 경로를 가로채므로 반드시 API 라우터와
+# /health 같은 직접 라우트 등록 뒤에 위치해야 한다(라우트 우선순위).
+# 경로는 cwd와 무관하게 이 파일 기준으로 해석한다.
+_STATIC_DIR = Path(__file__).parent / "static"
+app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")

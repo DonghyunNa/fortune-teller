@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>운세 — Fortune Telling</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="aurora"></div>
+  <main class="shell">
+    <header class="masthead">
+      <h1>운세</h1>
+      <p class="subtitle">사주 · 오늘의 운세 · 타로</p>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-tab="saju" role="tab">사주</button>
+      <button class="tab" data-tab="daily" role="tab">오늘의 운세</button>
+      <button class="tab" data-tab="tarot" role="tab">타로</button>
+    </nav>
+
+    <!-- ============ 사주 ============ -->
+    <section class="panel is-active" id="panel-saju">
+      <form id="form-saju" class="card form">
+        <div class="field">
+          <label for="saju-birth_date">생년월일 <span class="req">*</span></label>
+          <input type="date" id="saju-birth_date" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="saju-birth_hour">태어난 시</label>
+            <select id="saju-birth_hour">
+              <option value="">모름 (시주 미상)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="saju-birth_minute">분</label>
+            <input type="number" id="saju-birth_minute" min="0" max="59" value="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>달력</label>
+          <div class="radio-row">
+            <label class="radio"><input type="radio" name="saju-calendar" value="solar" checked /> 양력</label>
+            <label class="radio"><input type="radio" name="saju-calendar" value="lunar" /> 음력</label>
+          </div>
+        </div>
+
+        <div class="field leap-field" id="saju-leap-field" hidden>
+          <label class="check"><input type="checkbox" id="saju-is_leap_month" /> 윤달</label>
+        </div>
+
+        <div class="field">
+          <label for="saju-focus">풀이 초점</label>
+          <input type="text" id="saju-focus" placeholder="연애운 / 직업운 / 건강... 비우면 종합" />
+        </div>
+
+        <div class="field">
+          <label for="saju-tone">톤</label>
+          <input type="text" id="saju-tone" list="tone-presets" placeholder="balanced / playful / scholarly 또는 자유 표현" />
+        </div>
+
+        <div class="field">
+          <label for="saju-gender">성별</label>
+          <select id="saju-gender">
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="saju-context">추가 맥락</label>
+          <textarea id="saju-context" rows="2" maxlength="500" placeholder="최근 새로운 인연이 생겨 궁금합니다 (선택)"></textarea>
+        </div>
+
+        <button type="submit" class="submit">사주 풀이 보기</button>
+      </form>
+      <div class="result" id="result-saju" aria-live="polite"></div>
+    </section>
+
+    <!-- ============ 오늘의 운세 ============ -->
+    <section class="panel" id="panel-daily">
+      <form id="form-daily" class="card form">
+        <div class="field">
+          <label for="daily-target_date">운세 볼 날짜</label>
+          <input type="date" id="daily-target_date" />
+          <p class="hint">비우면 오늘(KST)</p>
+        </div>
+
+        <div class="field">
+          <label for="daily-birth_date">생년월일</label>
+          <input type="date" id="daily-birth_date" />
+          <p class="hint">입력하면 개인화 풀이, 비우면 일진 전반 기운만</p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="daily-birth_hour">태어난 시</label>
+            <select id="daily-birth_hour">
+              <option value="">모름</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="daily-birth_minute">분</label>
+            <input type="number" id="daily-birth_minute" min="0" max="59" value="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>생일 달력</label>
+          <div class="radio-row">
+            <label class="radio"><input type="radio" name="daily-calendar" value="solar" checked /> 양력</label>
+            <label class="radio"><input type="radio" name="daily-calendar" value="lunar" /> 음력</label>
+          </div>
+        </div>
+
+        <div class="field leap-field" id="daily-leap-field" hidden>
+          <label class="check"><input type="checkbox" id="daily-is_leap_month" /> 윤달</label>
+        </div>
+
+        <div class="field">
+          <label for="daily-focus">풀이 초점</label>
+          <input type="text" id="daily-focus" placeholder="일/업무 / 관계 / 재물... 비우면 종합" />
+        </div>
+
+        <div class="field">
+          <label for="daily-tone">톤</label>
+          <input type="text" id="daily-tone" list="tone-presets" placeholder="balanced / playful / scholarly 또는 자유 표현" />
+        </div>
+
+        <div class="field">
+          <label for="daily-gender">성별</label>
+          <select id="daily-gender">
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="daily-context">추가 맥락</label>
+          <textarea id="daily-context" rows="2" maxlength="500" placeholder="오늘 중요한 미팅이 있습니다 (선택)"></textarea>
+        </div>
+
+        <button type="submit" class="submit">오늘의 운세 보기</button>
+      </form>
+      <div class="result" id="result-daily" aria-live="polite"></div>
+    </section>
+
+    <!-- ============ 타로 ============ -->
+    <section class="panel" id="panel-tarot">
+      <form id="form-tarot" class="card form">
+        <div class="field">
+          <label>스프레드</label>
+          <div class="radio-row">
+            <label class="radio"><input type="radio" name="tarot-spread" value="one" checked /> 원 카드 (1장)</label>
+            <label class="radio"><input type="radio" name="tarot-spread" value="three" /> 쓰리 카드 (과거·현재·미래)</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="tarot-allow_reversed" checked /> 역방향 허용</label>
+        </div>
+
+        <div class="field">
+          <label for="tarot-seed">시드 (재현용)</label>
+          <input type="number" id="tarot-seed" placeholder="비우면 무작위" />
+          <p class="hint">같은 시드 = 같은 카드. 비우면 사용된 시드를 결과에 표시</p>
+        </div>
+
+        <div class="field">
+          <label for="tarot-question">질문/고민</label>
+          <input type="text" id="tarot-question" maxlength="200" placeholder="이직을 고민 중입니다 (선택)" />
+        </div>
+
+        <div class="field">
+          <label for="tarot-focus">풀이 초점</label>
+          <input type="text" id="tarot-focus" placeholder="연애 / 진로 / 재물... 비우면 종합" />
+        </div>
+
+        <div class="field">
+          <label for="tarot-tone">톤</label>
+          <input type="text" id="tarot-tone" list="tone-presets" placeholder="balanced / playful / scholarly 또는 자유 표현" />
+        </div>
+
+        <div class="field">
+          <label for="tarot-gender">성별</label>
+          <select id="tarot-gender">
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="tarot-context">추가 맥락</label>
+          <textarea id="tarot-context" rows="2" maxlength="500" placeholder="최근 일에 대한 회의감이 큽니다 (선택)"></textarea>
+        </div>
+
+        <button type="submit" class="submit">타로 뽑고 풀이 보기</button>
+      </form>
+      <div class="result" id="result-tarot" aria-live="polite"></div>
+    </section>
+
+    <footer class="footnote">
+      학습·재미용 토이 프로젝트입니다. 운세 결과는 자기 이해를 위한 도구입니다.
+      <a href="/docs">API 문서 (/docs)</a>
+    </footer>
+  </main>
+
+  <datalist id="tone-presets">
+    <option value="balanced"></option>
+    <option value="playful"></option>
+    <option value="scholarly"></option>
+  </datalist>
+
+  <script src="/app.js"></script>
+</body>
+</html>
