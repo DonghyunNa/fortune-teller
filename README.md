@@ -219,6 +219,125 @@ LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발�
 - 개인화 응답(`personalized: true`)을 넣으면 일간·십신·오행 보강을 반영한 풀이가, 비개인화 응답을 넣으면 일진 전반의 기운만 풀이됩니다.
 - 응답 shape·에러 정책은 `/saju/interpret`과 동일(`interpretation`/`model`/`tokens_in`/`tokens_out`/`error`, LLM 실패 시 200 + `error`).
 
+### `POST /tarot/draw` — 타로 카드 추출 (LLM 없음)
+
+스프레드에 맞춰 카드를 뽑습니다. LLM을 호출하지 않으므로 API 키 없이 사용 가능합니다.
+
+요청 (one 스프레드):
+```json
+{
+  "spread": "one",
+  "allow_reversed": true,
+  "seed": 42
+}
+```
+
+응답 (one):
+```json
+{
+  "spread": "one",
+  "cards": [
+    {
+      "name_en": "The Star",
+      "name_ko": "별",
+      "arcana": "major",
+      "suit": null,
+      "reversed": false,
+      "position": null,
+      "keywords": ["희망", "영감", "치유", "평온"]
+    }
+  ],
+  "normalized": {"seed_used": 42, "seed_provided": true, "allow_reversed": true, "card_count": 1}
+}
+```
+
+요청 (three 스프레드):
+```json
+{
+  "spread": "three",
+  "allow_reversed": true,
+  "seed": 42
+}
+```
+
+응답 (three): `cards`가 3장이며 각 카드에 `position`("과거"/"현재"/"미래")이 채워집니다.
+```json
+{
+  "spread": "three",
+  "cards": [
+    {"name_en": "The Fool", "name_ko": "바보", "arcana": "major", "suit": null, "reversed": false, "position": "과거", "keywords": ["새로운 시작", "순수함", "모험", "자유"]},
+    {"name_en": "Ace of Wands", "name_ko": "완드 에이스", "arcana": "minor", "suit": "완드", "reversed": true, "position": "현재", "keywords": ["...(역방향 키워드)..."]},
+    {"name_en": "...", "name_ko": "...", "arcana": "...", "position": "미래", "keywords": ["..."]}
+  ],
+  "normalized": {"seed_used": 42, "seed_provided": true, "allow_reversed": true, "card_count": 3}
+}
+```
+
+- **재현성(`seed`)**: 같은 `seed`는 항상 같은 카드·방향·순서를 보장합니다. `seed`를 비우면 무작위로 뽑되, 실제 사용한 seed를 `normalized.seed_used`에 기록하므로 그 값을 다시 넣으면 동일 결과를 재현할 수 있습니다(`seed_provided`로 사용자가 직접 준 seed인지 구분).
+- **정/역방향(`allow_reversed`)**: `true`(기본)면 카드마다 50% 확률로 역방향(`reversed: true`)이 나오고, 카드의 `keywords`도 해당 방향 기준으로 채워집니다. `false`면 전부 정방향으로 고정됩니다(입문/간이 모드).
+- **스프레드(`spread`)**: `one`(1장) / `three`(과거·현재·미래 3장)만 구현되어 있습니다. **`celtic`은 Swagger 스키마에 값이 노출되지만 v0.1 미구현이라 선택 시 항상 `422`를 반환합니다.**
+
+### `POST /tarot/interpret` — 타로 LLM 풀이
+
+`/tarot/draw`의 응답 객체를 **그대로** `draw` 필드에 넣어 호출합니다(라운드트립).
+
+요청:
+```json
+{
+  "draw": { "...": "POST /tarot/draw 응답 객체를 그대로 붙여넣기" },
+  "question": "이직을 고민 중입니다",
+  "focus": "진로",
+  "tone": "balanced",
+  "gender": "female",
+  "context": "최근 일에 대한 회의감이 큽니다"
+}
+```
+
+- `draw`: **`/tarot/draw` 응답을 통째로** 넣습니다. 빈 객체로는 동작하지 않습니다.
+- `question`: 알고 싶은 질문/고민 자유 입력(최대 200자). 생략하면 일반 풀이
+- `focus`: 풀이 초점 자유 입력(예: `"연애"`, `"진로"`, `"재물"`). 생략하면 종합
+- `tone`: 자유 입력. 프리셋 `balanced`/`playful`/`scholarly` 또는 자유 표현(예: `"20대 친구처럼"`)
+- `gender`: `male` / `female` (선택), `context`: 자유 메모 최대 500자 (선택)
+
+응답:
+```json
+{
+  "interpretation": "...뽑힌 카드와 방향을 근거로 한 자연어 풀이...",
+  "model": "claude-sonnet-4-6",
+  "tokens_in": 480,
+  "tokens_out": 1100,
+  "error": null
+}
+```
+
+LLM 호출 실패 시 `interpretation: null`, `error: "..."`. 서버 500은 발생하지 않습니다.
+
+### `POST /tarot/reading` — 타로 통합 풀이 (추출 + LLM 한 번에)
+
+`/tarot/draw` + `/tarot/interpret`을 한 번에 처리합니다. 추출 입력(spread/allow_reversed/seed)과 풀이 입력(question/focus/tone/gender/context)을 함께 보냅니다.
+
+요청:
+```json
+{
+  "spread": "three",
+  "allow_reversed": true,
+  "seed": 42,
+  "question": "이직을 고민 중입니다",
+  "focus": "진로",
+  "tone": "balanced",
+  "gender": "female",
+  "context": "최근 일에 대한 회의감이 큽니다"
+}
+```
+
+응답: `draw`(카드 추출 결과 풀세트) + `interpretation`(LLM 풀이) + `model`/`tokens_*`/`error`.
+
+- `seed`를 주면 추출이 재현 가능하므로 통합 풀이도 카드 구성이 동일해집니다.
+- 추출 실패(미구현 스프레드 `celtic` 등) → 422
+- LLM 실패 → 200 + `interpretation: null` + `error: "..."`
+
+> **라운드트립 사용법**: `/tarot/draw`로 먼저 카드만 뽑아 사용자에게 보여준 뒤, 그 응답 객체를 그대로 `/tarot/interpret`의 `draw` 필드에 넣어 풀이를 받는 2단계 흐름을 쓸 수 있습니다. 추출과 풀이를 한 번에 끝내려면 `/tarot/reading`을 쓰세요.
+
 ## 도메인 룰 요약
 
 | 항목 | 룰 |
